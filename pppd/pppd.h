@@ -227,6 +227,7 @@ extern int	hungup;		/* Physical layer has disconnected */
 extern int	ifunit;		/* Interface unit number */
 extern char	ifname[];	/* Interface name */
 extern char	hostname[];	/* Our hostname */
+extern char pidfilename[];	/* name of pid file */
 extern u_char	outpacket_buf[]; /* Buffer for outgoing packets */
 extern int	devfd;		/* fd of underlying device */
 extern int	fd_ppp;		/* fd for talking PPP */
@@ -532,7 +533,7 @@ void notify __P((struct notifier *, int));
 int  ppp_send_config __P((int, int, u_int32_t, int, int));
 int  ppp_recv_config __P((int, int, u_int32_t, int, int));
 const char *protocol_name __P((int));
-void remove_pidfiles __P((void));
+void remove_pidfile __P((char *));
 void lock_db __P((void));
 void unlock_db __P((void));
 

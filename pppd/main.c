@@ -132,7 +132,7 @@ struct channel *the_channel;
 
 char *progname;			/* Name of this program */
 char hostname[MAXNAMELEN];	/* Our hostname */
-static char pidfilename[MAXPATHLEN];	/* name of pid file */
+char pidfilename[MAXPATHLEN];	/* name of pid file */
 static char linkpidfile[MAXPATHLEN];	/* name of linkname pid file */
 char ppp_devnam[MAXPATHLEN];	/* name of PPP tty (maybe ttypx) */
 uid_t uid;			/* Our real user-id */
@@ -243,6 +243,7 @@ static void chld __P((int));
 static void toggle_debug __P((int));
 static void open_ccp __P((int));
 static void bad_signal __P((int));
+static void remove_pidfilenames __P((void));
 static void holdoff_end __P((void *));
 static void forget_child __P((int pid, int status));
 static int reap_kids __P((void));
@@ -842,16 +843,24 @@ create_linkpidfile(pid)
 }
 
 /*
- * remove_pidfile - remove our pid files
+ * remove_pidfile - remove one of the 2 pidfiles (pidfilename or linkpidfile)
  */
-void remove_pidfiles()
+void 
+remove_pidfile(filename)
+    char* filename;
 {
-    if (pidfilename[0] != 0 && unlink(pidfilename) < 0 && errno != ENOENT)
-	warn("unable to delete pid file %s: %m", pidfilename);
-    pidfilename[0] = 0;
-    if (linkpidfile[0] != 0 && unlink(linkpidfile) < 0 && errno != ENOENT)
-	warn("unable to delete pid file %s: %m", linkpidfile);
-    linkpidfile[0] = 0;
+    if (filename[0] != 0 && unlink(filename) < 0 && errno != ENOENT)
+	warn("unable to delete pid file %s: %m", filename);
+    filename[0] = 0;
+}
+
+/*
+ * remove_pidfiles - remove our pid files
+ */
+static void remove_pidfiles()
+{
+    remove_pidfile(pidfilename);
+    remove_pidfile(linkpidfile);
 }
 
 /*
