@@ -247,6 +247,7 @@ static void holdoff_end __P((void *));
 static void forget_child __P((int pid, int status));
 static int reap_kids __P((void));
 static void childwait_end __P((void *));
+static void wait_children __P((void));
 
 #ifdef USE_TDB
 static void update_db_entry __P((void));
@@ -570,25 +571,11 @@ main(argc, argv)
 	    if (!persist)
 		break;
 	}
+
+	wait_children();
     }
 
-    /* Wait for scripts to finish */
-    reap_kids();
-    if (n_children > 0) {
-	if (child_wait > 0)
-	    TIMEOUT(childwait_end, NULL, child_wait);
-	if (debug) {
-	    struct subprocess *chp;
-	    dbglog("Waiting for %d child processes...", n_children);
-	    for (chp = children; chp != NULL; chp = chp->next)
-		dbglog("  script %s, pid %d", chp->prog, chp->pid);
-	}
-	while (n_children > 0 && !childwait_done) {
-	    handle_events();
-	    if (kill_link && !childwait_done)
-		childwait_end(NULL);
-	}
-    }
+    wait_children();
 
     die(status);
     return 0;
@@ -1884,6 +1871,36 @@ record_child(pid, prog, done, arg, killable)
 	chp->next = children;
 	chp->killable = killable;
 	children = chp;
+    }
+}
+
+/*
+ * wait_children - wait for scripts to finish.
+ * if child_wait is 0, wait indefinitely.
+ * else, kill'em all at the end of timeout
+ */
+static void
+wait_children()
+{
+    /* Wait for scripts to finish */
+    reap_kids();
+    if (n_children > 0) {
+	childwait_done = 0;
+	if (child_wait > 0)
+	    TIMEOUT(childwait_end, NULL, child_wait);
+	if (debug) {
+	    struct subprocess *chp;
+	    dbglog("Waiting for %d child processes...", n_children);
+	    for (chp = children; chp != NULL; chp = chp->next)
+		dbglog("  script %s, pid %d", chp->prog, chp->pid);
+	}
+	while (n_children > 0 && !childwait_done) {
+	    handle_events();
+	    if (asked_to_quit && !childwait_done)
+		childwait_end(NULL);
+	}
+	if (child_wait > 0)
+	    UNTIMEOUT(childwait_end, NULL);
     }
 }
 
