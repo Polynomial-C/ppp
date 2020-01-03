@@ -16,11 +16,11 @@
 
 char pppd_version[] = VERSION;
 
-static int passwdfd = -1;
 static char save_passwd[MAXSECRETLEN];
 
+static int readpassword __P((char **));
 static option_t options[] = {
-    { "passwordfd", o_int, &passwdfd,
+    { "passwordfd", o_special, (void *)readpassword,
       "Receive password on this file descriptor" },
     { NULL }
 };
@@ -30,43 +30,39 @@ static int pwfd_check (void)
     return 1;
 }
 
-static int pwfd_passwd (char *user, char *passwd)
+static int readpassword(char **argv)
 {
-    int readgood, red;
+    char *arg = *argv;
+    int passwdfd = -1;
+    int chunk, len;
 
-    if (passwdfd == -1)
-	return -1;
-
-    if (passwd == NULL)
-	return 1;
-
-    if (passwdfd == -2) {
-	strcpy (passwd, save_passwd);
-	return 1;
+    if (sscanf(arg, "%d", &passwdfd) != 1 || passwdfd < 0)
+    {
+	error ("\"%s\" is not a valid file descriptor number", arg);
+	return 0;
     }
 
-    readgood = 0;
+    len = 0;
     do {
-	red = read (passwdfd, passwd + readgood, MAXSECRETLEN - 1 - readgood);
-	if (red == 0)
+	chunk = read (passwdfd, save_passwd + len, MAXSECRETLEN - 1 - len);
+	if (chunk == 0)
 	    break;
-	if (red < 0) {
-	    error ("Can't read secret from fd\n");
-	    readgood = -1;
-	    break;
+	if (chunk < 0) {
+	    error ("Can't read secret from fd %d", passwdfd);
+	    return 0;
 	}
-	readgood += red;
-    } while (readgood < MAXSECRETLEN - 1);
-
+	len += chunk;
+    } while (len < MAXSECRETLEN - 1);
+    save_passwd[len] = 0;
     close (passwdfd);
 
-    if (readgood < 0)
-	return 0;
+    return 1;
+}
 
-    passwd[readgood] = 0;
-    strcpy (save_passwd, passwd);
-    passwdfd = -2;
-
+static int pwfd_passwd (char *user, char *passwd)
+{
+    if (passwd != NULL)
+	strcpy (passwd, save_passwd);
     return 1;
 }
 
