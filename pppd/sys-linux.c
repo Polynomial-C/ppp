@@ -2289,6 +2289,17 @@ int ppp_available(void)
     kernel_version = KVERSION(osmaj, osmin, ospatch);
 
     fd = open("/dev/ppp", O_RDWR);
+    if (fd < 0) {
+	/* try making it and see if that helps. */
+	if (errno == ENOENT && mknod("/dev/ppp", S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP,
+		  makedev(108, 0)) >= 0) {
+	    fd = open("/dev/ppp", O_RDWR);
+	    if (fd >= 0)
+		info("Created /dev/ppp device node");
+	    else
+		unlink("/dev/ppp");     /* didn't work, undo the mknod */
+	}
+    }
     if (fd >= 0) {
 	new_style_driver = 1;
 
