@@ -532,6 +532,8 @@ waitForPADO(PPPoEConnection *conn, int timeout)
     struct timeval tv;
     PPPoEPacket packet;
     int len;
+    time_t start, now;
+    int time_remain;
 
     struct PacketCriteria pc;
     pc.conn          = conn;
@@ -541,9 +543,13 @@ waitForPADO(PPPoEConnection *conn, int timeout)
     pc.seenServiceName = 0;
     conn->error = 0;
 	
+    time(&start);
     do {
+	time(&now);
+	time_remain = timeout - (int)difftime(now, start);
+	if (time_remain <= 0) return;   /* Timed out */
 	if (BPF_BUFFER_IS_EMPTY) {
-	    tv.tv_sec = timeout;
+	    tv.tv_sec = time_remain;
 	    tv.tv_usec = 0;
 	
 	    FD_ZERO(&readable);
