@@ -103,6 +103,9 @@ int	maxconnect = 0;		/* Maximum connect time */
 char	user[MAXNAMELEN];	/* Username for PAP */
 char	passwd[MAXSECRETLEN];	/* Password for PAP */
 bool	persist = 0;		/* Reopen link after it goes down */
+bool	killoldaddr = 0;	/* If our IP is reassigned on
+				   reconnect, kill active TCP
+				   connections using the old IP. */
 char	our_name[MAXNAMELEN];	/* Our name for authentication purposes */
 bool	demand = 0;		/* do dial-on-demand */
 char	*ipparam = NULL;	/* Extra parameter for ip up/down scripts */
@@ -250,6 +253,11 @@ option_t general_options[] = {
 
     { "demand", o_bool, &demand,
       "Dial on demand", OPT_INITONLY | 1, &persist },
+
+    { "killoldaddr", o_bool, &killoldaddr,
+      "Kill connections from an old source address", 1},
+    { "nokilloldaddr", o_bool,&killoldaddr,
+      "Don't kill connections from an old source address" },
 
     { "--version", o_special_noarg, (void *)showversion,
       "Show version number" },
