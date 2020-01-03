@@ -1,7 +1,10 @@
 #CC	= gcc
-COPTS	= -O2 -g
 CFLAGS	= $(COPTS) -I.. -I../../include -fPIC
-LDFLAGS_SHARED	= -shared
+LDFLAGS_PROG := $(LDFLAGS)
+export LDFLAGS LDFLAGS_PROG
+LDFLAGS	+= -shared
+# need the following option, otherwise linking plugins might fail with undef errors (Gentoo bug 210837)
+LDFLAGS += -Wl,--allow-shlib-undefined
 INSTALL	= install
 
 DESTDIR = $(INSTROOT)@DESTDIR@
@@ -30,7 +33,7 @@ all:	$(PLUGINS)
 	for d in $(SUBDIRS); do $(MAKE) $(MFLAGS) -C $$d all || exit $$?; done
 
 %.so: %.c
-	$(CC) -o $@ $(LDFLAGS) $(LDFLAGS_SHARED) $(CFLAGS) $^
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
 
 VERSION = $(shell awk -F '"' '/VERSION/ { print $$2; }' ../patchlevel.h)
 

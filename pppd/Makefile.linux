@@ -32,7 +32,7 @@ endif
 
 # CC = gcc
 #
-COPTS = -O2 -pipe -Wall -g
+COPTS = -Wall
 LIBS =
 
 # Uncomment the next line to include support for Microsoft's
