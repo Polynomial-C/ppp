@@ -324,6 +324,10 @@ option_t general_options[] = {
       "Metric to use for the default route (Linux only; -1 for default behavior)",
       OPT_PRIV|OPT_LLIMIT|OPT_INITONLY, NULL, 0, -1 },
 
+    { "defaultmetric", o_int, &dfl_route_metric,
+      "Old (deprecated) option for default route metric (Linux only; -1 for default behavior)",
+      OPT_PRIV|OPT_LLIMIT|OPT_INITONLY, NULL, 0, -1 },
+
 #ifdef HAVE_MULTILINK
     { "multilink", o_bool, &multilink,
       "Enable multilink operation", OPT_PRIO | 1 },
