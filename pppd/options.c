@@ -691,6 +691,11 @@ process_option(opt, cmd, argv)
     current_option = opt->name;
     if ((opt->flags & OPT_PRIVFIX) && privileged_option)
 	prio += OPRIO_ROOT;
+
+    if (current_option == "defaultmetric")
+	warn("Option '%s' is deprecated, switch to 'defaultroute-metric'",
+	     current_option);
+
     while (mainopt->flags & OPT_PRIOSUB)
 	--mainopt;
     if (mainopt->flags & OPT_PRIO) {
